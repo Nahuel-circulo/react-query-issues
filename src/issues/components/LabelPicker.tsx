@@ -1,26 +1,39 @@
-import { useQuery } from '@tanstack/react-query';
-import { githubApi } from '../../api/githubApi';
-import { Label } from '../../interfaces/label';
+import { useLabels } from "../../hooks/useLabels"
+import LoadingIcon from "../../shared/components/LoadingIcon"
+import {FC} from 'react';
 
+interface Props {
+  selectedLabels: string[]
+  onChange: (labels: string) => void
 
-const getLabels = async ():Promise<Label[]> => {
-  const { data } = await githubApi.get<Label[]>('/labels');
-  return data
 }
 
+export const LabelPicker : FC<Props> = ({selectedLabels,onChange}) => {
 
-export const LabelPicker = () => {
+  const labelsQuery = useLabels()
 
-  const labelsQuery = useQuery(['labels'], getLabels)
+  //! por qué isLoading y no isFetching?
+  if (labelsQuery.isLoading) {
+    return <LoadingIcon/>
+  }
+
+
+
   return (
     <div>
-      <span
-        className="badge rounded-pill m-1 label-picker"
-        style={{ border: `1px solid #ffccd3`, color: '#ffccd3' }}
-      >
-        Primary
-      </span>
 
+      {
+        labelsQuery.data?.map(label => (
+          <span
+          key={label.id}
+            className={`badge rounded-pill m-1 label-picker ${selectedLabels.includes(label.name) && 'label-active'}`}
+            style={{ border: `1px solid #${label.color}`, color: `#${label.color}`  }}
+            onClick={() => onChange(label.name)}
+          >
+            {label.name}
+          </span>
+        )
+        )}
     </div>
   )
 }
